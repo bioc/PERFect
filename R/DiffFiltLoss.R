@@ -57,11 +57,11 @@ DiffFiltLoss <- function(X, Order_Ind, Plot = TRUE, Taxa_Names = NULL) {
   }
 
   # Check the format of Order_Ind
-  if (class(Order_Ind) != "integer")
+  if (!is(Order_Ind,"integer"))
     stop("Order_Ind argument must be a vector of integer values")
 
   # Check the format of Plot
-  if (class(Plot) != "logical")
+  if (!is(Plot,"logical"))
     stop("Plot argument must be a logical value")
 
   # X - data matrix with taxa in columns and samples in rows

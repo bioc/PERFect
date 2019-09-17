@@ -79,8 +79,6 @@ FiltLoss <- function(X, Order = "NP", Order.user = NULL, type = "Cumu", Plot = T
 
   # Check the format of X
   if(!(class(X) %in% c("matrix"))){X <- as.matrix(X)}
-  #   stop('X must be a data frame or a matrix')
-  # if(!(class(X) == "matrix")){X <- as.matrix(X)}
 
   # Check the format of Order
   if(!(Order %in% c("NP","NC","NCw")))
@@ -91,7 +89,7 @@ FiltLoss <- function(X, Order = "NP", Order.user = NULL, type = "Cumu", Plot = T
     stop('type argument can only be "Cumu" or "Ind" ')
 
   # Check the format of Plot
-  if(class(Plot) != "logical")
+  if(!is(Plot,"logical"))
     stop('Plot argument must be a logical value')
 
   #Order columns by importance

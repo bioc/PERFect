@@ -162,8 +162,6 @@ PERFect_sim <- function(X, infocol= NULL,  Order = "NP",   Order.user = NULL,
   if (!(class(X) %in% c("matrix"))) {
     X <- as.matrix(X)
   }
-  #  stop('X must be a data frame or a matrix')
-  #if(!(class(X) == "matrix")){X <- as.matrix(X)}
 
   # Check the format of Order
   if (!(Order %in% c("NP", "pvals", "NC", "NCw")))
@@ -174,7 +172,7 @@ PERFect_sim <- function(X, infocol= NULL,  Order = "NP",   Order.user = NULL,
     stop('normalize argument can only be "counts", "prop", or "pres" ')
 
   # Check the format of center
-  if (class(center) != "logical")
+  if (!is(center,"logical"))
     stop('center argument must be a logical value')
 
   # Check the format of quant
@@ -190,7 +188,7 @@ PERFect_sim <- function(X, infocol= NULL,  Order = "NP",   Order.user = NULL,
     stop('alpha argument must be a numerical value')
 
   # Check if pvals_sim object is input correctly
-  if (class(pvals_sim) != "NULL" & length(pvals_sim$pvals) == 0)
+  if (!is(pvals_sim,"NULL") & length(pvals_sim$pvals) == 0)
     stop('pvals_sim object must be a result from simultaneous PERFect with taxa abundance ordering')
 
   #Order columns by importance

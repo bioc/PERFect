@@ -96,15 +96,13 @@ PERFect_perm_reorder <- function(X,  Order ="NP",  Order.user = NULL, res_perm,
   if (!(class(X) %in% c("matrix"))) {
     X <- as.matrix(X)
   }
-  #   stop('X must be a data frame or a matrix')
-  # if(!(class(X) == "matrix")){X <- as.matrix(X)}
 
   # Check the format of Order
   if (!(Order %in% c("NP", "pvals", "NC", "NCw")))
     stop('Order argument can only be "NP", "pvals", "NC", or "NCw" ')
 
   # Check the format of res_perm
-  if (class(res_perm) != "NULL" & length(res_perm$pvals) == 0)
+  if (!is(res_perm,"NULL") & length(res_perm$pvals) == 0)
     stop('res_perm argument must be the output from the function PERFect_perm()')
 
   # Check the format of normalize
@@ -112,7 +110,7 @@ PERFect_perm_reorder <- function(X,  Order ="NP",  Order.user = NULL, res_perm,
     stop('normalize argument can only be "counts", "prop", or "pres" ')
 
   # Check the format of center
-  if (class(center) != "logical")
+  if (!is(center,"logical"))
     stop('center argument must be a logical value')
 
   # Check the format of distr

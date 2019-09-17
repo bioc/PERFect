@@ -51,8 +51,6 @@ pvals_Plots <- function(PERFect, X, quantiles = c(0.25, 0.5, 0.8, 0.9), alpha=0.
 
   # Check the format of X
   if(!(class(X) %in% c("matrix"))){X <- as.matrix(X)}
-  #   stop('X must be a data frame or a matrix')
-  # if(!(class(X) == "matrix")){X <- as.matrix(X)}
 
   # Check the format of quantiles
   if(!is.vector(quantiles)) stop('quantiles argument must be a vector')

@@ -45,11 +45,9 @@ FL_J <- function(X, J){
 
   # Check the format of X
   if(!(class(X) %in% c("matrix"))){X <- as.matrix(X)}
-  #   stop('X must be a data frame or a matrix')
-  # if(!(class(X) == "matrix")){X <- as.matrix(X)}
 
   # Check the format of J
-  if(class(J) != "character")
+  if(!is(J,"character"))
     stop('J argument must be a character vector containing names of taxa to be removed')
 
   Ind <- which(colnames(X) %in%  J)
