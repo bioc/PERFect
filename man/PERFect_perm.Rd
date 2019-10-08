@@ -121,12 +121,13 @@ res_sim <- PERFect_sim(X=Counts)
 #order according to p-values
 pvals_sim <- pvals_Order(Counts, res_sim)
 
-#### Uncomment to run algorithm with parallel processing ith more than 2 cores
-# #obtain permutation PERFEct results using NP taxa ordering
-# res_perm <- PERFect_perm(X = Prop, Order.user = pvals_sim, algorithm = "fast")
+\dontrun{
+# obtain permutation PERFEct results using NP taxa ordering
+res_perm <- PERFect_perm(X = Prop, Order.user = pvals_sim, algorithm = "fast")
 
-# #permutation perfect colored by FLu values
-# pvals_Plots(PERFect = res_perm, X = Counts, quantiles = c(0.25, 0.5, 0.8, 0.9), alpha=0.05)
+# permutation perfect colored by FLu values
+pvals_Plots(PERFect = res_perm, X = Counts, quantiles = c(0.25, 0.5, 0.8, 0.9), alpha=0.05)
+}
 }
 \references{
 Azzalini, A. (2005). The skew-normal distribution and related multivariate families. Scandinavian Journal of Statistics, 32(2), 159-188.

@@ -22,9 +22,9 @@ Perm_j_s <- function(j, Netw, k,p, p2 = NULL){
   #k - number of permutations used
   #create a list of k*p arrangements of orders
   if(is.null(p2)){p2 <- p}
-  labl <- sapply(seq_len(k),function(x) NULL)
+  labl <- lapply(seq_len(k),function(x) NULL)
   labl <- lapply(labl,function(x)  sample(seq_len(p),p2))
-  FL_j <- sapply(labl,DiffFiltLoss_j, Netw = Netw, j=j)
+  FL_j <- vapply(labl,DiffFiltLoss_j, numeric(1), Netw = Netw, j=j)
   return(FL_j)
 }
 
@@ -46,7 +46,7 @@ sampl_distr <- function(X, k){
   #load variables for each core
   parallel::clusterExport(cl,c("DiffFiltLoss_j","Perm_j_s","Netw","k","p"),envir=environment())
   #parallel apply
-  FL_j <- parallel::parLapply(cl, res_all, function(x) Perm_j_s(j = x, Netw =Netw, k=k, p =p, p2 = x+1))
+  FL_j <- parallel::parLapply(cl, res_all, function(x) Perm_j_s(j = x, Netw = Netw, k = k, p = p, p2 = x + 1))
   #FL_j <- lapply(res_all, function(x) Perm_j_s(j = x, Netw =Netw, k=k, p =p, p2 = x+1))
   # End the parallel processing
   parallel::stopCluster(cl)

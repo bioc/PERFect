@@ -235,13 +235,11 @@ PERFect_sim <- function(X, infocol= NULL,  Order = "NP",   Order.user = NULL,
   }
 
   #calculate DFL values
-  Order_Ind <-
-    rep(seq_len(length(Order.vec)))#convert to numeric indicator values
-  DFL <-
-    DiffFiltLoss(X = X,
-                 Order_Ind,
-                 Plot = TRUE,
-                 Taxa_Names = Order.vec)
+  Order_Ind <-  rep(seq_len(length(Order.vec)))#convert to numeric indicator values
+  DFL <- DiffFiltLoss(X = X,
+                     Order_Ind,
+                     Plot = TRUE,
+                     Taxa_Names = Order.vec)
   #alternative calculation of filtering loss using presise formula
   #Function to calculate j^th DFL loss
 

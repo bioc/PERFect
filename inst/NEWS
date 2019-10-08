@@ -1,1 +1,7 @@
-prepare to release
+Changes in version 0.99.10 (2019-09-17)
++ Submitted to Bioconductor 
+
+Changes in version 0.99.11 (2019-09-19)
++ Fixed bugs
++ Made the following significant changes
+  o Removed Knight dataset

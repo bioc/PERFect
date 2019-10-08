@@ -72,21 +72,22 @@
 #' # Counts data matrix
 #' Counts <- mock2$Counts
 #'
-#' #### Uncomment to run algorithm with parallel processing with more than 2 cores
-#' # #obtain permutation PERFEct results using NP taxa ordering
-#' # system.time(res_perm <- PERFect_perm(X=Prop, k = 1000, algorithm = "fast))
+#' \dontrun{
+#' # obtain permutation PERFEct results using NP taxa ordering
+#' system.time(res_perm <- PERFect_perm(X=Prop, k = 1000, algorithm = "fast"))
 #'
-#' # #run PERFEct_sim() function and obtain p-values ordering
-#' # res_sim <- PERFect_sim(X=Prop)
+#' # run PERFEct_sim() function and obtain p-values ordering
+#' res_sim <- PERFect_sim(X=Prop)
 #'
-#' # #order according to p-values
-#' # pvals_sim <- pvals_Order(Counts, res_sim)
+#' # order according to p-values
+#' pvals_sim <- pvals_Order(Counts, res_sim)
 #'
-#' # #update perfect_perm object according to p-values ordering
-#' # res_reorder <- PERFect_perm_reorder(X=Prop,  Order.user = pvals_sim,  res_perm = res_perm)
+#' # update perfect_perm object according to p-values ordering
+#' res_reorder <- PERFect_perm_reorder(X=Prop,  Order.user = pvals_sim,  res_perm = res_perm)
 #'
-#' # #permutation perfect colored by FLu values
-#' # pvals_Plots(PERFect = res_perm, X = Counts, quantiles = c(0.25, 0.5, 0.8, 0.9), alpha=0.05)
+#' # permutation perfect colored by FLu values
+#' pvals_Plots(PERFect = res_perm, X = Counts, quantiles = c(0.25, 0.5, 0.8, 0.9), alpha=0.05)
+#' }
 #' @export
 
 PERFect_perm_reorder <- function(X,  Order ="NP",  Order.user = NULL, res_perm,
@@ -173,37 +174,44 @@ PERFect_perm_reorder <- function(X,  Order ="NP",  Order.user = NULL, res_perm,
   #re-evaluate p-values
   pvals <- rep(0, length(DFL$DFL))
   names(pvals) <- names(DFL$DFL)
-  for (i in seq_len(DFL$DFL)) {
+  #for (i in seq_len(DFL$DFL)) {
     if (distr == "sn") {
-      pvals[i] <- 1 - psn(
-        x = log(DFL$DFL[i]),
-        xi = res_perm$est[[i]][1],
-        omega = res_perm$est[[i]][2],
-        alpha = res_perm$est[[i]][3]
-      )
+      # pvals[i] <- 1 - psn(
+      #   x = log(DFL$DFL[i]),
+      #   xi = res_perm$est[[i]][1],
+      #   omega = res_perm$est[[i]][2],
+      #   alpha = res_perm$est[[i]][3]
+      # )
+      #
+      pvals <- mapply(function(dat1,dat2){
+        vapply(dat1, function(z) 1-psn(x = dat1, xi = dat2[1], omega = dat2[2], alpha = dat2[3]), numeric(1))
+      }, dat1 = log(DFL$DFL), res_perm$est)
     }
     if (distr == "norm") {
       #calculate p-values
-      pvals[i] <-
-        pnorm(
-          q = log(DFL$DFL[i]),
-          mean = res_perm$est[[i]][1],
-          sd = res_perm$est[[i]][2],
-          lower.tail = FALSE,
-          log.p = FALSE
-        )
+      # pvals[i] <-
+      #   pnorm(
+      #     q = log(DFL$DFL[i]),
+      #     mean = res_perm$est[[i]][1],
+      #     sd = res_perm$est[[i]][2],
+      #     lower.tail = FALSE,
+      #     log.p = FALSE
+      #   )
+      pvals <- mapply(function(dat1,dat2){
+        vapply(dat1, function(z) 1-pnorm(q = dat1, mean = dat2[1], sd = dat2[2], lower.tail = FALSE, log.p = FALSE),
+               numeric(1))
+      }, dat1 = log(DFL$DFL), res_perm$est)
     }
 
-  }
+  #}
 
   #re-calculate filtered X
   #smooth p-values
   if (rollmean){
-  pvals_avg <-
-    zoo::rollmean(pvals,
-                  k = 3,
-                  align = direction,
-                  fill = NA)
+  pvals_avg <- zoo::rollmean(pvals,
+                             k = 3,
+                             align = direction,
+                             fill = NA)
   } else {
     pvals_avg <- pvals
   }

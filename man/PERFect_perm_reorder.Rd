@@ -61,31 +61,6 @@ This function is designed to save computational time needed to obtain and fit th
 for each taxon if taxa ordering different from the one used in \code{PERFect_perm()} is used.
 Note, the distribution and OTU table X should match the distribution used in \code{PERFect_perm()}.
 }
-\examples{
-data(mock2)
-
-# Proportion data matrix
-Prop <- mock2$Prop
-
-# Counts data matrix
-Counts <- mock2$Counts
-
-#### Uncomment to run algorithm with parallel processing with more than 2 cores
-# #obtain permutation PERFEct results using NP taxa ordering
-# system.time(res_perm <- PERFect_perm(X=Prop, k = 1000, algorithm = "fast))
-
-# #run PERFEct_sim() function and obtain p-values ordering
-# res_sim <- PERFect_sim(X=Prop)
-
-# #order according to p-values
-# pvals_sim <- pvals_Order(Counts, res_sim)
-
-# #update perfect_perm object according to p-values ordering
-# res_reorder <- PERFect_perm_reorder(X=Prop,  Order.user = pvals_sim,  res_perm = res_perm)
-
-# #permutation perfect colored by FLu values
-# pvals_Plots(PERFect = res_perm, X = Counts, quantiles = c(0.25, 0.5, 0.8, 0.9), alpha=0.05)
-}
 \references{
 Azzalini, A. (2005). The skew-normal distribution and related multivariate families. Scandinavian Journal of Statistics, 32(2), 159-188.
 

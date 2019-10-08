@@ -126,16 +126,17 @@
 #' #order according to p-values
 #' pvals_sim <- pvals_Order(Counts, res_sim)
 #'
-#' #### Uncomment to run algorithm with parallel processing ith more than 2 cores
-#' # #obtain permutation PERFEct results using NP taxa ordering
-#' # res_perm <- PERFect_perm(X = Prop, Order.user = pvals_sim, algorithm = "fast")
+#' \dontrun{
+#' # obtain permutation PERFEct results using NP taxa ordering
+#' res_perm <- PERFect_perm(X = Prop, Order.user = pvals_sim, algorithm = "fast")
 #'
-#' # #permutation perfect colored by FLu values
-#' # pvals_Plots(PERFect = res_perm, X = Counts, quantiles = c(0.25, 0.5, 0.8, 0.9), alpha=0.05)
+#' # permutation perfect colored by FLu values
+#' pvals_Plots(PERFect = res_perm, X = Counts, quantiles = c(0.25, 0.5, 0.8, 0.9), alpha=0.05)
+#' }
 #' @export
 
 # Algorithm with parallel processing
-PERFect_perm <- function(X, infocol = NULL, Order = "NP",   Order.user = NULL,
+PERFect_perm <- function(X, infocol = NULL, Order = "NP", Order.user = NULL,
                          normalize = "counts", algorithm = "fast", center = FALSE,
                          quant = c(0.10, 0.25, 0.5),  distr ="sn",
                          alpha = 0.10, rollmean = TRUE, direction ="left",
@@ -235,20 +236,9 @@ PERFect_perm <- function(X, infocol = NULL, Order = "NP",   Order.user = NULL,
     pvals <- rep(NA, p - 1)
 
     #calculate DFL values and FL values
-    Order_Ind <-
-      rep(seq_len(length(Order.vec))) #convert to numeric indicator values
-    DFL <-
-      DiffFiltLoss(X = X,
-                   Order_Ind,
-                   Plot = TRUE,
-                   Taxa_Names = Order.vec)
-    FL <-
-      FiltLoss(
-        X = X,
-        Order.user = Order.vec,
-        type =  "Ind",
-        Plot = TRUE
-      )$FL
+    Order_Ind <- rep(seq_len(length(Order.vec))) #convert to numeric indicator values
+    DFL <- DiffFiltLoss(X = X, Order_Ind,Plot = TRUE, Taxa_Names = Order.vec)
+    FL <- FiltLoss(X = X, Order.user = Order.vec, type =  "Ind", Plot = TRUE)$FL
 
     #name p-values
     names(pvals) <- names(DFL$DFL)
@@ -257,8 +247,7 @@ PERFect_perm <- function(X, infocol = NULL, Order = "NP",   Order.user = NULL,
     dfl_distr <- sampl_distr(X = X, k = k)
 
     #convert to log differences
-    lfl <- lapply(dfl_distr, function(x)
-      log(x[!x == 0]))
+    lfl <- lapply(dfl_distr, function(x) log(x[!x == 0]))
 
     #initiate a vector for OTUs to be double checked
     check <- c()
@@ -292,82 +281,74 @@ PERFect_perm <- function(X, infocol = NULL, Order = "NP",   Order.user = NULL,
 
       #find the first significant OTU among OTU of index n
       #fit <- parallel::parLapply(cl, lfl_main, function(x) fitdist(x, distr, method="qme", probs=quant))
-      fit <-
-        parallel::parLapply(cl, lfl_main, function(x)
-          fitdistrplus::qmedist(x, distr, probs = quant))
-      est <- lapply(fit, function(x)
-        x$estimate)
+      fit <- parallel::parLapply(cl, lfl_main, function(x) fitdistrplus::qmedist(x, distr, probs = quant))
+      est <- lapply(fit, function(x) x$estimate)
+
+      ## Start of binary search, don't use apply functions
       for (i in seq_len(length(n))) {
-        pvals[n[i]] <-
-          pnorm(
-            q = log(DFL$DFL[n[i]]),
-            mean = est[[i]][1],
-            sd = est[[i]][2],
-            lower.tail = FALSE,
-            log.p = FALSE
-          )
+        pvals[n[i]] <- pnorm(q = log(DFL$DFL[n[i]]),
+                             mean = est[[i]][1],
+                             sd = est[[i]][2],
+                             lower.tail = FALSE,
+                             log.p = FALSE)
         #calculate a few p-values before that first significant OTU
         if (pvals[n[i]] < alpha) {
           stop_idx <- n[i - 1]
           temp <- c((n[i - 1] + 1):(n[i] - 1), n[i] + 1, n[i] + 2)
           lfl_temp <- lfl[temp]
           #fit <- parallel::parLapply(cl,lfl_temp, function(x) fitdist(x, distr, method = "qme", probs=quant))
-          fit <-
-            parallel::parLapply(cl, lfl_temp, function(x)
-              fitdistrplus::qmedist(x, distr, probs = quant))
-          est <- lapply(fit, function(x)
-            x$estimate)
-          for (j in seq_len(length(temp))) {
-            pvals[temp[j]] <-
-              pnorm(
-                q = log(DFL$DFL[temp[j]]),
-                mean = est[[j]][1],
-                sd = est[[j]][2],
-                lower.tail = FALSE,
-                log.p = FALSE
-              )
-            #if(pvals[temp[j]] < 0.1) {break}
-          }
+          fit <- parallel::parLapply(cl, lfl_temp, function(x) fitdistrplus::qmedist(x, distr, probs = quant))
+          est <- lapply(fit, function(x) x$estimate)
+          # for (j in seq_len(length(temp))) {
+          #   pvals[temp[j]] <- pnorm(q = log(DFL$DFL[temp[j]]),
+          #                           mean = est[[j]][1],
+          #                           sd = est[[j]][2],
+          #                           lower.tail = FALSE,
+          #                           log.p = FALSE)
+          #   #if(pvals[temp[j]] < 0.1) {break}
+          # }
+          pvals[temp] <- mapply(function(dat1, dat2) {
+            vapply(dat1, function(z) 1-pnorm(q = dat1, mean = dat2[1], sd = dat2[2], lower.tail = FALSE, log.p = FALSE),
+                   numeric(1))
+          }, dat1 = log(DFL$DFL[temp]), est)
           break
         }
       }
       # find the potential cut off index
-      potential <- which(pvals == min(pvals, na.rm = TRUE))
+      # potential <- which(pvals == min(pvals, na.rm = TRUE))
+      potential <- which(pvals < alpha)[1]
 
-      # check the 10% most recent interval for unsual DFL values
+      # check the 10% most recent interval for unsual DFL values (ok with for loops, not many taxa)
       for (i in round((match(stop_idx, n) * 9 / 10)):match(stop_idx, n)) {
-        check <-
-          c(check, names(which(
-            DFL$DFL[n[i]:n[(i + 1)]] > max(DFL$DFL[n[i + 1]], DFL$DFL[n[i]]) &
-              FL[n[i]:n[(i + 1)]] > max(FL[n[i +
-                                               1]], FL[n[i]])
+        check <- c(check, names(which(DFL$DFL[n[i]:n[(i + 1)]] > max(DFL$DFL[n[i + 1]], DFL$DFL[n[i]]) &
+                                      FL[n[i]:n[(i + 1)]] > max(FL[n[i + 1]], FL[n[i]])
           )))
       }
       #Identify OTU with DFL higher than the potential cut off taxon
-      check <-
-        c(check, names(which(DFL$DFL[seq_len(potential - 1)] > DFL$DFL[potential] &
-                               FL[seq_len(potential - 1)] > FL[potential])))
+      check <- c(check, names(which(DFL$DFL[seq_len(potential - 1)] > DFL$DFL[potential] &
+                                    FL[seq_len(potential - 1)] > FL[potential])))
+
+      ## find uncalculated taxon's pvalues in check
+      check <- check[is.na(pvals[which(names(pvals) %in% check)])]
 
       if (length(check) != 0) {
         check_idx <- which(names(pvals) %in% check)
         # Calculate their pvalues
         lfl_check <- lfl[check_idx]
         #fit <- parallel::parLapply(cl,lfl_check, function(x) fitdist(x, distr,method = "qme", probs=quant))
-        fit <-
-          parallel::parLapply(cl, lfl_check, function(x)
-            fitdistrplus::qmedist(x, distr, probs = quant))
-        est <- lapply(fit, function(x)
-          x$estimate)
-        for (j in seq_len(check_idx)) {
-          pvals[check_idx[j]] <-
-            pnorm(
-              q = log(DFL$DFL[check_idx[j]]),
-              mean = est[[j]][1],
-              sd = est[[j]][2],
-              lower.tail = FALSE,
-              log.p = FALSE
-            )
-        }
+        fit <- parallel::parLapply(cl, lfl_check, function(x) fitdistrplus::qmedist(x, distr, probs = quant))
+        est <- lapply(fit, function(x) x$estimate)
+        # for (j in seq_len(length(check_idx))) {
+        #   pvals[check_idx[j]] <- pnorm(q = log(DFL$DFL[check_idx[j]]),
+        #                                mean = est[[j]][1],
+        #                                sd = est[[j]][2],
+        #                                lower.tail = FALSE,
+        #                                log.p = FALSE)
+        # }
+        pvals[check_idx] <- mapply(function(dat1, dat2) {
+          vapply(dat1, function(z) 1-pnorm(q = dat1, mean = dat2[1], sd = dat2[2], lower.tail = FALSE, log.p = FALSE),
+                 numeric(1))
+        }, dat1 = log(DFL$DFL[check_idx]), est)
       }
     }
 
@@ -380,10 +361,9 @@ PERFect_perm <- function(X, infocol = NULL, Order = "NP",   Order.user = NULL,
       })
 
       # starting values to fit the skew normal distribution
-      lp <-
-        list(xi = mean(lfl[[1]]),
-             omega = sd(lfl[[1]]),
-             alpha = 1.5)
+      lp <- list(xi = mean(lfl[[1]]),
+                 omega = sd(lfl[[1]]),
+                 alpha = 1.5)
 
       #get the sampled values from OTU of index n
       lfl_main <- lfl[n]
@@ -393,77 +373,61 @@ PERFect_perm <- function(X, infocol = NULL, Order = "NP",   Order.user = NULL,
 
       #find the first significant OTU among OTU of index n
       #fit <- parallel::parLapply(cl, lfl_main, function(x) fitdist(x, distr,method = "qme", probs=quant, start=lp))
-      suppressWarnings(fit <-
-                         parallel::parLapply(cl, lfl_main, function(x)
-                           fitdistrplus::qmedist(x, distr, probs = quant, start = lp)))
-      est <- lapply(fit, function(x)
-        x$estimate)
+      suppressWarnings(fit <- parallel::parLapply(cl, lfl_main, function(x)
+                              fitdistrplus::qmedist(x, distr, probs = quant, start = lp)))
+      est <- lapply(fit, function(x) x$estimate)
+
+      ## Start the binary search which not compatible with apply functions
       for (i in seq_len(length(n))) {
-        pvals[n[i]] <-
-          1 - psn(
-            x = log(DFL$DFL[n[i]]),
-            xi = est[[i]][1],
-            omega = est[[i]][2],
-            alpha = est[[i]][3]
-          )
+        pvals[n[i]] <- 1 - psn(x = log(DFL$DFL[n[i]]),xi = est[[i]][1],omega = est[[i]][2],alpha = est[[i]][3])
+
         #calculate a few p-values before that first significant OTU
         if (pvals[n[i]] < alpha) {
           stop_idx <- n[i - 1]
           temp <- c((n[i - 1] + 1):(n[i] - 1), n[i] + 1, n[i] + 2)
           lfl_temp <- lfl[temp]
           #fit <- parallel::parLapply(cl,lfl_temp, function(x) fitdist(x, distr, method = "qme", probs=quant, start=lp))
-          suppressWarnings(fit <-
-                             parallel::parLapply(cl, lfl_temp, function(x)
-                               fitdistrplus::qmedist(x, distr, probs = quant, start = lp)))
-          est <- lapply(fit, function(x)
-            x$estimate)
-          for (j in seq_len(length(temp))) {
-            pvals[temp[j]] <-
-              1 - psn(
-                x = log(DFL$DFL[temp[j]]),
-                xi = est[[j]][1],
-                omega = est[[j]][2],
-                alpha = est[[j]][3]
-              )
-            #if(pvals[temp[j]] < alpha) {break}
-          }
+          suppressWarnings(fit <- parallel::parLapply(cl, lfl_temp, function(x)
+                                  fitdistrplus::qmedist(x, distr, probs = quant, start = lp)))
+
+          est <- lapply(fit, function(x) x$estimate)
+
+          pvals[temp] <- mapply(function(dat1, dat2) {
+            vapply(dat1, function(z) 1 - psn(x = dat1, xi = dat2[1], omega = dat2[2], alpha = dat2[3]), numeric(1))
+          }, dat1 = log(DFL$DFL[temp]), est)
           break
         }
       }
       # find the potential cut off index
-      potential <- which(pvals == min(pvals, na.rm = TRUE))
+      # potential <- which(pvals == min(pvals, na.rm = TRUE))
+      potential <- which(pvals < alpha)[1]
 
-      # check the 10% most recent interval for unsual DFL values
+      # check the 10% most recent interval for unsual DFL values (just a few taxa, ok to use for loop)
       for (i in round((match(stop_idx, n) * 9 / 10)):match(stop_idx, n)) {
-        check <-
-          c(check, names(which(
-            DFL$DFL[n[i]:n[(i + 1)]] > max(DFL$DFL[n[i + 1]], DFL$DFL[n[i]]) &
-              FL[n[i]:n[(i + 1)]] > max(FL[n[i +
-                                               1]], FL[n[i]])
+        check <- c(check, names(which(DFL$DFL[n[i]:n[(i + 1)]] > max(DFL$DFL[n[i + 1]], DFL$DFL[n[i]]) &
+                                      FL[n[i]:n[(i + 1)]] > max(FL[n[i + 1]], FL[n[i]])
           )))
       }
+
       #Identify OTU with DFL higher than the potential cut off taxon
-      check <-
-        c(check, names(which(DFL$DFL[seq_len(potential - 1)] > DFL$DFL[potential] &
-                               FL[seq_len(potential - 1)] > FL[potential])))
+      check <- c(check, names(which(DFL$DFL[seq_len(potential - 1)] > DFL$DFL[potential] &
+                                    FL[seq_len(potential - 1)] > FL[potential])))
+
+      ## find uncalculated taxon's pvalues in check
+      check <- check[is.na(pvals[which(names(pvals) %in% check)])]
+
       if (length(check) != 0) {
         check_idx <- which(names(pvals) %in% check)
         # Calculate their pvalues
         lfl_check <- lfl[check_idx]
         #fit <- parallel::parLapply(cl,lfl_check, function(x) fitdist(x, distr, method = "qme", probs=quant, start=lp))
-        suppressWarnings(fit <-
-                           parallel::parLapply(cl, lfl_check, function(x)
-                             fitdistrplus::qmedist(x, distr, probs = quant, start = lp)))
-        est <- lapply(fit, function(x)
-          x$estimate)
-        for (j in seq_len(length(check_idx))) {
-          pvals[check_idx[j]] <- 1 - psn(
-            x = log(DFL$DFL[check_idx[j]]),
-            xi = est[[j]][1],
-            omega = est[[j]][2],
-            alpha = est[[j]][3]
-          )
-        }
+        suppressWarnings(fit <- parallel::parLapply(cl, lfl_check, function(x)
+                                fitdistrplus::qmedist(x, distr, probs = quant, start = lp)))
+
+        est <- lapply(fit, function(x) x$estimate)
+        pvals[check_idx] <- mapply(function(dat1,dat2){
+          vapply(dat1, function(z) 1-psn(x = dat1, xi = dat2[1], omega = dat2[2], alpha = dat2[3]), numeric(1))
+        }, dat1 = log(DFL$DFL[check_idx]), est)
       }
     }
 
@@ -474,20 +438,16 @@ PERFect_perm <- function(X, infocol = NULL, Order = "NP",   Order.user = NULL,
       #smooth p-values
       non_na_ind <- which(!is.na(pvals))
       pvals_avg <- pvals
-      pvals_avg[non_na_ind] <-
-        zoo::rollapply(
-          pvals[non_na_ind],
-          width = 3,
-          mean,
-          align = direction,
-          fill = NA,
-          na.rm = TRUE
-        )
+      pvals_avg[non_na_ind] <- zoo::rollapply(pvals[non_na_ind],
+                                              width = 3,
+                                              mean,
+                                              align = direction,
+                                              fill = NA,
+                                              na.rm = TRUE
+                                             )
       #replace na's with original values
-      pvals_avg[non_na_ind][is.na(pvals_avg[non_na_ind])] <-
-        pvals[non_na_ind][is.na(pvals_avg[non_na_ind])]
-      names(pvals_avg) <-
-        names(pvals)[(length(pvals) - length(pvals_avg) + 1):length(pvals)]
+      pvals_avg[non_na_ind][is.na(pvals_avg[non_na_ind])] <- pvals[non_na_ind][is.na(pvals_avg[non_na_ind])]
+      names(pvals_avg) <- names(pvals)[(length(pvals) - length(pvals_avg) + 1):length(pvals)]
     } else {
       pvals_avg <- pvals
     }
@@ -543,8 +503,7 @@ PERFect_perm <- function(X, infocol = NULL, Order = "NP",   Order.user = NULL,
     dfl_distr <- sampl_distr(X = X, k = k)
 
     #convert to log differences
-    lfl <- lapply(dfl_distr, function(x)
-      log(x[!x == 0]))
+    lfl <- lapply(dfl_distr, function(x) log(x[!x == 0]))
 
     #fit the distribution
     if (distr == "norm") {
@@ -556,48 +515,48 @@ PERFect_perm <- function(X, infocol = NULL, Order = "NP",   Order.user = NULL,
         stop("At least two quantile values must be specified.")
       }
       #fit <- lapply(lfl, function(x) fitdist(x, distr, method = "qme", probs=quant))
-      fit <-
-        lapply(lfl, function(x)
-          fitdistrplus::qmedist(x, distr, probs = quant))
-      est <- lapply(fit, function(x)
-        x$estimate)
-      for (i in seq_len(p - 1)) {
-        pvals[i] <-
-          pnorm(
-            q = log(DFL$DFL[i]),
-            mean = est[[i]][1],
-            sd = est[[i]][2],
-            lower.tail = FALSE,
-            log.p = FALSE
-          )
-      }
+      fit <- lapply(lfl, function(x) fitdistrplus::qmedist(x, distr, probs = quant))
+      est <- lapply(fit, function(x) x$estimate)
+      # for (i in seq_len(p - 1)) {
+      #   pvals[i] <-
+      #     pnorm(
+      #       q = log(DFL$DFL[i]),
+      #       mean = est[[i]][1],
+      #       sd = est[[i]][2],
+      #       lower.tail = FALSE,
+      #       log.p = FALSE
+      #     )
+      # }
+      pvals <- mapply(function(dat1,dat2){
+        vapply(dat1, function(z) 1-pnorm(q = dat1, mean = dat2[1], sd = dat2[2], lower.tail = FALSE, log.p = FALSE),
+               numeric(1))
+      }, dat1 = log(DFL$DFL), est)
+
     }
 
     if (distr == "sn") {
       #lp <- lapply(lfl, function(x) list(xi = mean(x), omega = sd(x), alpha = 1.5))
       lp <-
-        list(xi = mean(lfl[[1]]),
-             omega = sd(lfl[[1]]),
-             alpha = 1.5)
+        list(xi = mean(lfl[[1]]), omega = sd(lfl[[1]]), alpha = 1.5)
       #fit <- lapply(lfl, function(x) fitdist(x, distr, method = "qme", probs=quant, start=lp))
-      suppressWarnings(fit <-
-                         lapply(lfl, function(x)
-                           fitdistrplus::qmedist(x, distr, probs = quant, start = lp)))
-      est <- lapply(fit, function(x)
-        x$estimate)
-      for (i in seq_len(p - 1)) {
-        pvals[i] <- 1 - psn(
-          x = log(DFL$DFL[i]),
-          xi = est[[i]][1],
-          omega = est[[i]][2],
-          alpha = est[[i]][3]
-        )
-      }
+      suppressWarnings(fit <- lapply(lfl, function(x) fitdistrplus::qmedist(x, distr, probs = quant, start = lp)))
+      est <- lapply(fit, function(x) x$estimate)
+      # for (i in seq_len(p - 1)) {
+      #   pvals[i] <- 1 - psn(
+      #     x = log(DFL$DFL[i]),
+      #     xi = est[[i]][1],
+      #     omega = est[[i]][2],
+      #     alpha = est[[i]][3]
+      #   )
+      # }
+      pvals <- mapply(function(dat1,dat2){
+        vapply(dat1, function(z) 1-psn(x = dat1, xi = dat2[1], omega = dat2[2], alpha = dat2[3]), numeric(1))
+      }, dat1 = log(DFL$DFL), est)
+
     }
 
     if (hist == TRUE) {
-      lfl <- lapply(lfl, function(x)
-        data.frame(x))
+      lfl <- lapply(lfl, function(x) data.frame(x))
       #build histograms for each taxon j
       for (i in seq_len(p - 1)) {
         #add a histogram
@@ -655,15 +614,13 @@ PERFect_perm <- function(X, infocol = NULL, Order = "NP",   Order.user = NULL,
 
     if (rollmean) {
       #smooth p-values
-      pvals_avg <-
-        zoo::rollapply(
-          pvals,
-          width = 3,
-          mean,
-          align = direction,
-          fill = NA,
-          na.rm = TRUE
-        )
+      pvals_avg <- zoo::rollapply(pvals,
+                                  width = 3,
+                                  mean,
+                                  align = direction,
+                                  fill = NA,
+                                  na.rm = TRUE
+                                 )
       #replace na's with original values
       pvals_avg[is.na(pvals_avg)] <- pvals[is.na(pvals_avg)]
       names(pvals_avg) <- names(pvals)

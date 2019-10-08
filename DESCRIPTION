@@ -1,7 +1,7 @@
 Package: PERFect
 Type: Package
 Title: Permutation filtration for microbiome data
-Version: 0.99.11
+Version: 0.99.12
 Date: 2019-09-02
 Author: 
     Ekaterina Smirnova <ekaterina.smirnova@vcuhealth.org>,
@@ -15,7 +15,7 @@ Description:
 Depends: R (>= 3.6.0), sn (>= 1.5.2)
 Imports: ggplot2 (>= 3.0.0), phyloseq (>= 1.28.0), zoo (>= 1.8.3),
         psych (>= 1.8.4), stats (>= 3.6.0), Matrix (>= 1.2.14),
-        fitdistrplus (>= 1.0.12)
+        fitdistrplus (>= 1.0.12), parallel (>= 3.6.0)
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: false
@@ -27,4 +27,4 @@ biocViews: Software, Microbiome, Sequencing, Classification,
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
 NeedsCompilation: no
-Packaged: 2019-08-28 20:38:07 UTC; CaoQ1
+
