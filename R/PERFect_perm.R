@@ -88,6 +88,8 @@
 #' If \code{"algorithm = full"} is chosen, a list is returned containing:
 #'
 #' \item{filtX}{Filtered OTU table.}
+#' 
+#' \item{info}{The metadata information.}
 #'
 #' \item{pvals}{P-values of the test.}
 #'
@@ -557,7 +559,7 @@ PERFect_perm <- function(X, infocol = NULL, Order = "NP", Order.user = NULL,
 
     if (hist == TRUE) {
       lfl <- lapply(lfl, function(x) data.frame(x))
-      #build histograms for each taxon j
+      #build histograms for each taxon j (big loop, cant use apply)
       for (i in seq_len(p - 1)) {
         #add a histogram
         lfl <- data.frame(log(dfl_distr[[i]][!dfl_distr[[i]] == 0]))

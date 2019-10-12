@@ -32,6 +32,8 @@ if(!requireNamespace("BiocManager", quietly = TRUE))
 BiocManager::install("PERFect")
 ```
 
+The following libraries are needed to reproduce the same results:
+
 ```{r required_libraries, echo = TRUE}
 rm(list=ls())
 
@@ -44,7 +46,7 @@ set.seed(12341)
 
 # Introduction
 
-This vignette explains the idea of filtering loss $FL(J)$ and demonstrates the PERFect permutation method on a small subset of the mock community data (Brooks et al. 2015). There are in total $10$ samples ($n = 10$) and $20$ taxa ($p = 20$) which contain $7$ signal taxa.  The two tables below shows ordered taxa abundance by columns, where the first table gives $13$ noise taxa and the second table gives $7$ signal taxa. For example, $N_1$ is the least abundant noise taxon and $N_{13}$ is the most abundant noise taxon; $S_1$ is the least abundant signal taxon and $S_7$ is the most abundant signal taxon. 
+Next generation sequencing (NGS) of the 16S rRNA marker is currently among the most widely used methods for microbial organisms identification. In these studies, samples collected at different body sites (e.g., vaginal swab, stool or blood) give counts of DNA fragments which are then grouped into similar microbial organisms, usually referred to as taxa. Recent microbiome quality control studies show that majority of rare taxa are caused by contamination and/or sequencing errors. The most common approach to address this problemis filtering, or removing spurious taxa from the 16S data set. This vignette explains the idea of filtering loss $FL(J)$ and demonstrates the PERFect permutation method on a small subset of the mock community data (Brooks et al. 2015). There are in total $10$ samples ($n = 10$) and $20$ taxa ($p = 20$) which contain $7$ signal taxa. The two tables below shows ordered taxa abundance by columns, where the first table gives $13$ noise taxa and the second table gives $7$ signal taxa. For example, $N_1$ is the least abundant noise taxon and $N_{13}$ is the most abundant noise taxon; $S_1$ is the least abundant signal taxon and $S_7$ is the most abundant signal taxon. 
 
 
 ```{r}
@@ -291,9 +293,9 @@ For taxon $j = 1, \dots, p-1$:
 
 - For permutation $1, \dots, k$:
 
-&nbsp; &nbsp; * Randomly select  $J^*_{j+1} \subset \{1, \dots, p\}$ with $|J^*_{j+1}| =j+1$
+&nbsp; &nbsp; &nbsp; &nbsp;  + Randomly select  $J^*_{j+1} \subset \{1, \dots, p\}$ with $|J^*_{j+1}| =j+1$
 
-&nbsp; &nbsp; * Calculate $DFL^*(j+1) = FL(J^*_{j+1}) - FL(J^*)$. 
+&nbsp; &nbsp; &nbsp; &nbsp;  + Calculate $DFL^*(j+1) = FL(J^*_{j+1}) - FL(J^*)$. 
 
 In this step of the algorithm, we construct the  permutation distribution for each  set of $j$ taxa to evaluate significance of corresponding $\log(DFL)$ values. To build the distribution of $d\mathcal{F}_{j+1}$ and test statistical hypothesis
 \begin{equation*}
@@ -542,6 +544,23 @@ By default, the function *PERFect_sim()* takes the data table, $X$, as a matrix 
 res_sim <- PERFect_sim(X = Counts)
 ```
 
+Sometimes, the input taxa table may contain metadata for each samples, such as the location where each sample is processed, the total reads for each sample or simply patient data. Such information must be pointed out in the input table, using the argument "infocol". For example, if the metadata were located at the first 5 columns, the syntax would be:
+
+```{r, echo = TRUE, eval = FALSE}
+res_sim <- PERFect_sim(X = Counts, infocol = c(1,2,3,4,5))
+```
+
+Although there are four provided taxa ordering, user can order taxa the way they wanted using the argument "Order.user". Specifically, user will provide a character vector of ordered taxa names. For example, if we wanted to order taxa by alphabet (which is the original ordering of the taxa table), we would input the following codes:
+
+```{r, echo = TRUE, eval = TRUE}
+alphabet.ordering <- colnames(Counts)
+head(alphabet.ordering)
+```
+
+```{r, echo = TRUE, eval = FALSE}
+res_sim <- PERFect_sim(X = Counts, Order.user = alphabet.ordering)
+```
+
 The "filtX" object from the result stores the filtered OTU matrix, which consists of 240 samples and 10 taxa in this example. We can identify the remaining taxa by looking into the column of the OTU matrix. 
 
 ```{r, echo = TRUE, eval = TRUE}
@@ -549,7 +568,13 @@ dim(res_sim$filtX)
 colnames(res_sim$filtX) # signal taxa
 ```
 
-The p-values for all taxa can be plot using the function *pvals_Plots()*.
+The p-values for all taxa can be extracted as
+
+```{r, echo = TRUE, eval = TRUE}
+head(res_sim$pvals)
+```
+
+and they can be plot using the function *pvals_Plots()*.
 
 ```{r, echo = TRUE, eval = TRUE}
 p <- pvals_Plots(PERFect = res_sim, X = Counts, quantiles = c(0.25, 0.5, 0.8, 0.9), alpha=0.05)
