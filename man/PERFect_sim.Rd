@@ -73,6 +73,8 @@ A list is returned containing:
 
 \item{filtX}{Filtered OTU table.}
 
+\item{info}{The metadata information.}
+
 \item{pvals}{P-values of the test.}
 
 \item{DFL}{Differences in filtering loss values.}

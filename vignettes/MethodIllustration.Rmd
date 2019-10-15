@@ -593,12 +593,13 @@ p2 <- p2$plot + ggtitle("Fast Algorithm")
 ggpubr::ggarrange(p1,p2,ncol = 2)
 ```
 
+The figure above illustrates the plot of permutation PERFect p-values calculated by the full and fast algorithm for the *mock2* dataset. Although both methods achieve the similar cutoff taxon, the fast algorithm only calculate 11 out 46 p-values hence is more computationally efficient.
+
+# Session Info
+
 ```{r}
 sessionInfo()
 ```
-
-
-The figure above illustrates the plot of permutation PERFect p-values calculated by the full and fast algorithm for the *mock2* dataset. Although both methods achieve the similar cutoff taxon, the fast algorithm only calculate 11 out 46 p-values hence is more computationally efficient.
 
 # References
 
