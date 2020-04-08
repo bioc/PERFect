@@ -25,6 +25,5 @@ Suggests: knitr, rmarkdown, kableExtra, ggpubr
 biocViews: Software, Microbiome, Sequencing, Classification,
         Metagenomics
 VignetteBuilder: knitr
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 NeedsCompilation: no
-

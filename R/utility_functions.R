@@ -323,7 +323,9 @@ sum_n <- function(tot){
 #' @export
 TraditR1 <- function(X, thresh=5){
   # Check the format of X
-  if(!(class(X) %in% c("matrix"))){X <- as.matrix(X)}
+  if (!is(X, "matrix")) {
+    X <- as.matrix(X)
+  }
 
   # Check the format of thresh
   if(!is.numeric(thresh)) stop('thresh argument must be a numerical value')
@@ -378,7 +380,9 @@ TraditR1 <- function(X, thresh=5){
 TraditR2 <- function(X, Ab_min = 0.001){
 
   # Check the format of X
-  if(!(class(X) %in% c("matrix"))){X <- as.matrix(X)}
+  if (!is(X, "matrix")) {
+    X <- as.matrix(X)
+  }
 
   # Check the format of Ab_min
   if(!is.numeric(Ab_min)) stop('Ab_min argument must be a numerical value')

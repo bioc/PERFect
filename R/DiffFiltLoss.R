@@ -52,7 +52,7 @@
 DiffFiltLoss <- function(X, Order_Ind, Plot = TRUE, Taxa_Names = NULL) {
 
   # Check the format of X
-  if (!(class(X) %in% c("matrix"))) {
+  if (!is(X, "matrix")) {
     X <- as.matrix(X)
   }
 

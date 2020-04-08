@@ -94,7 +94,7 @@ PERFect_perm_reorder <- function(X,  Order ="NP",  Order.user = NULL, res_perm,
                                  normalize = "counts", center = FALSE, alpha = 0.10, distr = "sn",
                                  rollmean = TRUE, direction ="left", pvals_sim = NULL){
   # Check the format of X
-  if (!(class(X) %in% c("matrix"))) {
+  if (!is(X, "matrix")) {
     X <- as.matrix(X)
   }
 

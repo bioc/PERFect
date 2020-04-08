@@ -78,7 +78,9 @@ FiltLoss <- function(X, Order = "NP", Order.user = NULL, type = "Cumu", Plot = T
   Norm_Ratio <- rep(1, p)
 
   # Check the format of X
-  if(!(class(X) %in% c("matrix"))){X <- as.matrix(X)}
+  if (!is(X, "matrix")) {
+    X <- as.matrix(X)
+  }
 
   # Check the format of Order
   if(!(Order %in% c("NP","NC","NCw")))

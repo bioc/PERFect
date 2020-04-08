@@ -153,7 +153,7 @@ PERFect_perm <- function(X, infocol = NULL, Order = "NP", Order.user = NULL,
   }
 
   # Check the format of X
-  if (!(class(X) %in% c("matrix"))) {
+  if (!is(X, "matrix")) {
     X <- as.matrix(X)
   }
 

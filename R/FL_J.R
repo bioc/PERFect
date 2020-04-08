@@ -44,7 +44,9 @@
 FL_J <- function(X, J){
 
   # Check the format of X
-  if(!(class(X) %in% c("matrix"))){X <- as.matrix(X)}
+  if (!is(X, "matrix")) {
+    X <- as.matrix(X)
+  }
 
   # Check the format of J
   if(!is(J,"character"))

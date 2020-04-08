@@ -4,8 +4,10 @@
 \name{mock2}
 \alias{mock2}
 \title{Bias experiment data}
-\format{This file contains a count OTU table and a proportion OTU table, each with 240 samples and 46 taxa. A list of true
- taxa is also given.}
+\format{
+This file contains a count OTU table and a proportion OTU table, each with 240 samples and 46 taxa. A list of true
+ taxa is also given.
+}
 \usage{
 data(mock2)
 }
