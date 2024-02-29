@@ -1,7 +1,7 @@
 Package: PERFect
 Type: Package
 Title: Permutation filtration for microbiome data
-Version: 1.17.0
+Version: 1.17.1
 Date: 2019-09-02
 Author: 
     Ekaterina Smirnova <ekaterina.smirnova@vcuhealth.org>,
@@ -27,3 +27,4 @@ biocViews: Software, Microbiome, Sequencing, Classification,
 VignetteBuilder: knitr
 RoxygenNote: 7.1.0
 NeedsCompilation: no
+PackageStatus: Deprecated
